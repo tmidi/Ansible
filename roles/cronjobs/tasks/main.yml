@@ -1,0 +1,30 @@
+- name: Install prerequisites
+  yum:
+    name: libselinux-python
+    state: present
+
+
+
+- name: Get minute module
+  get_time:
+    ipaddress : "{{ansible_default_ipv4.address}}"
+  register: time
+
+- debug: var=time
+
+- name: Create Cronjob test
+  cron:
+    name: "Echo test"
+    minute: "{{time.minute}}"
+    hour: "{{time.hour}}"
+    job: "ls -alh /root/test  > /root/cron_results"
+    state: present 
+
+
+- name: Create Cronjob test
+  cron:
+    name: "Echo test2"
+    minute: "{{time.minute}}"
+    hour: "{{time.hour + 1}}"
+    job: "ls -alh /root/test23  > /root/cron_results"
+    state: present 
