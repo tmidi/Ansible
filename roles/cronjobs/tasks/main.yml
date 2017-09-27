@@ -3,24 +3,27 @@
     name: libselinux-python
     state: present
 
-
+# This module will get Hour:minutes using IP address
+# Edit "library/get_time.py" to meet your needs
 
 - name: Get minute module
   get_time:
     ipaddress : "{{ansible_default_ipv4.address}}"
   register: time
 
-- debug: var=time
+# This is jut for debug, uncomment to view the output
+# - debug: var=time
 
+# this ensure the hours and minutes are within accepted values
 - name: Create Cronjob test
   cron:
     name: "Echo test"
-    minute: "{{time.minute}}"
-    hour: "{{time.hour}}"
+    minute: "{{int(time.minute) % 60}}"
+    hour: "{{int(time.hour) % 24}}"
     job: "ls -alh /root/test  > /root/cron_results"
     state: present 
 
-
+# You can 
 - name: Create Cronjob test
   cron:
     name: "Echo test2"
