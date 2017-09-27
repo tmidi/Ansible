@@ -1,4 +1,4 @@
-#!/usr/bin/python -x
+#!/usr/bin/python
 
 import json
 
@@ -12,14 +12,13 @@ EXAMPLES = '''
 - name: Get time
   get_time:
     ipaddress : "10.0.0.1"
-  register: r
+  register: time
 '''
 
 from ansible.module_utils.basic import *
 
 
 def ip_time_min(data):
-    
     valueip = data.split(".")
     minimalip = "".join(valueip[2:4])
     minutes = int(minimalip) % 60
@@ -27,7 +26,7 @@ def ip_time_min(data):
 
 
 def ip_time_hour(data):
-    
+
     valueip = data.split(".")
     minimalip = "".join(valueip[2:4])
     hour = int(minimalip) % 24
@@ -43,14 +42,12 @@ def main():
     )
 
     ipaddress = module.params['ipaddress']
-    
     choice_map = {
-        "minute" : ip_time_min(ipaddress),
-        "hour" : ip_time_hour(ipaddress),
+        "minute": ip_time_min(ipaddress),
+        "hour": ip_time_hour(ipaddress),
     }
 
-    result = json.dumps(choice_map)
-    return choice_map
+    return module.exit_json(hour=choice_map['hour'], minute=choice_map['minute'])
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     main()
