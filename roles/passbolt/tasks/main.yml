@@ -1,0 +1,72 @@
+- name: Check if nginx repo is installed
+  stat: path={{ nginx_repo_file }}
+  register: nginx_repo_file
+
+- name: Copy nginx repo file
+  copy:
+    src: files/nginx.repo
+    dest: /etc/yum.repos.d/nginx.repo
+    owner: root
+    group: root
+    mode: 0644
+    when: not epel_repo_file.stat.exists
+
+- name: Check if epel repo is installed
+  stat: path={{ epel_repo_file }}
+  register: epel_repo_file
+
+- name: Install EPEL repo.
+  yum:
+    name: "{{ epel_repo_url }}"
+    state: present
+  register: result
+  until: '"failed" not in result'
+  when: not epel_repo_file.stat.exists
+
+- name: Install WebTatic repo
+  yum:
+    name: https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+    state: present
+
+- include: maria-install.yml
+- include: maria-config.yml
+
+- name: install Nginx and MariaDB
+  yum: state=present name={{ item }} update_cache=yes
+  with_items:
+    - nginx
+    - mariadb-server
+    - hp70w-fpm
+    - php70w-opcache
+    - php70w-gd
+    - php70w-mysql
+    - php70w-mcrypt
+    - php70w-cli
+    - php70w-pear
+    - php70w-devel
+    - gpgme-devel
+    - gcc
+    - git
+    - rng-tools
+
+- name: Edit PHP-FPM configuration file (change user and group to nginx)
+  lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '= apache'
+    line: '= nginx'
+    backup: yes
+
+# Install pecl package
+- pear:
+    name: pecl/gnupg
+    state: present
+
+- name: Copy gnupg.ini to activate module for PHP
+  copy:
+    src: files/gnupg.ini
+    dest: /etc/php.d/gnupg.ini
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
