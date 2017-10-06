@@ -1,3 +1,4 @@
+---
 - name: Check if nginx repo is installed
   stat: path={{ nginx_repo_file }}
   register: nginx_repo_file
@@ -9,7 +10,7 @@
     owner: root
     group: root
     mode: 0644
-    when: not epel_repo_file.stat.exists
+  when: not nginx_repo_file.stat.exists
 
 - name: Check if epel repo is installed
   stat: path={{ epel_repo_file }}
@@ -19,24 +20,32 @@
   yum:
     name: "{{ epel_repo_url }}"
     state: present
+    validate_certs: no
   register: result
   until: '"failed" not in result'
+  retries: 5
+  delay: 10
   when: not epel_repo_file.stat.exists
+
+- name: Import EPEL GPG key.
+  rpm_key:
+    key: "{{ epel_repo_gpg_key_url }}"
+    state: present
+  when: not epel_repofile_result.stat.exists
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Install WebTatic repo
   yum:
     name: https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
     state: present
-
-- include: maria-install.yml
-- include: maria-config.yml
+    update_cache: yes
 
 - name: install Nginx and MariaDB
   yum: state=present name={{ item }} update_cache=yes
   with_items:
     - nginx
     - mariadb-server
-    - hp70w-fpm
+    - php70w-fpm
     - php70w-opcache
     - php70w-gd
     - php70w-mysql
@@ -56,8 +65,20 @@
     line: '= nginx'
     backup: yes
 
+- name: Creat tmp folder under root
+  file:
+    path: /root/tmp
+    owner: root
+    group: root
+    state: directory
+    mode: 0755
+
+- name: Change PECl tmp folder
+  shell: pear config-set temp_dir /root/tmp
+
 # Install pecl package
-- pear:
+- name: Install pecl package  GNUPG
+  pear:
     name: pecl/gnupg
     state: present
 
@@ -70,3 +91,15 @@
     mode: 0644
     backup: yes
 
+# Role copied from: https://github.com/bertvv/ansible-role-mariadb
+
+- include: maria-install.yml
+- include: maria-config.yml
+- include: maria-root-password.yml
+- include: maria-databases.yml
+- include: maria-users.yml
+
+- name: Git clone Passbolt repo
+  git:
+    repo: https://github.com/passbolt/passbolt_api.git
+    dest: /var/www/passbolt

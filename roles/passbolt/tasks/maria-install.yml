@@ -20,4 +20,4 @@
     name: "{{ mariadb_service }}"
     state: started
     enabled: yes
-tags: mariadb
+  tags: mariadb

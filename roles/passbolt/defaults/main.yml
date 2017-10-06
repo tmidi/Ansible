@@ -1,4 +1,9 @@
 ---
+nginx_repo_file: "/etc/yum.repos.d/nginx.repo"
+#               https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+#               http://mirror.math.princeton.edu/pub/epel/epel-release-latest-7.noarch.rpm
+#               https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm http://download.fedoraproject.org/pub/epel/
+#epel_repo_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
 epel_repo_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
 epel_repo_gpg_key_url: "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
 epel_repo_file: "/etc/yum.repos.d/epel.repo"
